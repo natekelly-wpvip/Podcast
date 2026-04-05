@@ -7,11 +7,21 @@
     <description>Weekly AI-generated analysis at the intersection of media and artificial intelligence. Script written by Claude. Voice by ElevenLabs. Published every Friday.</description>
     <link>https://natekelly-wpvip.github.io/Podcast</link>
     <language>en-us</language>
-    <lastBuildDate>Sat, 05 Apr 2026 00:00:00 +0000</lastBuildDate>
+    <lastBuildDate>Sun, 05 Apr 2026 22:55:11 GMT</lastBuildDate>
     <atom:link href="https://natekelly-wpvip.github.io/Podcast/feed.xml" rel="self" type="application/rss+xml"/>
     <itunes:author>Signal &amp; Noise</itunes:author>
     <itunes:category text="Technology"/>
     <itunes:explicit>no</itunes:explicit>
     <itunes:type>episodic</itunes:type>
+
+    <item>
+      <title>Ep. 1: The Newsroom That Fired Its Memory</title>
+      <description>Three weeks ago, the Philadelphia Inquirer quietly laid off its entire archive research team. Twelve people, most of them with more than a decade at the paper, replaced by an internal retrieval system built on top of a fine-tuned large language model. The system can surface any story from 1829 to ye...</description>
+      <pubDate>Sun, 05 Apr 2026 22:55:11 GMT</pubDate>
+      <guid isPermaLink="false"></guid>
+      <enclosure url="" type="audio/mpeg" length="9564621"/>
+      <itunes:episode>1</itunes:episode>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
   </channel>
 </rss>
