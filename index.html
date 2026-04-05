@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Signal & Noise — Media & AI Podcast</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0d0d0d;
+      --surface: #161616;
+      --border: #2a2a2a;
+      --text: #e8e8e8;
+      --muted: #888;
+      --accent: #f0e040;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Georgia', serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 64px 24px 48px;
+      max-width: 680px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .eyebrow {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 400;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+    }
+
+    .tagline {
+      font-size: 1.1rem;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 480px;
+    }
+
+    .subscribe-bar {
+      margin-top: 36px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .subscribe-bar a {
+      display: inline-block;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      text-decoration: none;
+      padding: 10px 20px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .subscribe-bar a:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .subscribe-bar a.primary {
+      background: var(--accent);
+      color: #0d0d0d;
+      border-color: var(--accent);
+      font-weight: bold;
+    }
+
+    .subscribe-bar a.primary:hover {
+      background: #fff;
+      border-color: #fff;
+      color: #0d0d0d;
+    }
+
+    main {
+      flex: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+      width: 100%;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 0 40px;
+    }
+
+    .episodes-label {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 28px;
+    }
+
+    .loading {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .episode-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .episode {
+      padding: 24px 0;
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .episode-meta {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .episode-title {
+      font-size: 1.1rem;
+      font-weight: 400;
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+
+    .episode-description {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .episode-play {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid var(--border);
+      background: none;
+      cursor: pointer;
+      color: var(--text);
+      flex-shrink: 0;
+      margin-top: 4px;
+      transition: border-color 0.15s, color 0.15s;
+      text-decoration: none;
+    }
+
+    .episode-play:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .episode-play svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 24px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Weekly Podcast</p>
+    <h1>Signal &amp; Noise</h1>
+    <p class="tagline">AI-generated analysis at the intersection of media and artificial intelligence. New episodes every Friday.</p>
+    <div class="subscribe-bar">
+      <a class="primary" href="feed.xml">RSS Feed</a>
+      <a href="https://podcastsconnect.apple.com/my-podcasts/new-feed?submitfeed=https%3A%2F%2Fnatekelly-wpvip.github.io%2FPodcast%2Ffeed.xml" id="apple-link">Apple Podcasts</a>
+      <a href="https://podcasters.spotify.com/pod/submit" id="spotify-link">Spotify</a>
+    </div>
+  </header>
+
+  <main>
+    <hr class="divider" />
+    <p class="episodes-label">Episodes</p>
+    <div id="episode-list" class="episode-list">
+      <p class="loading">Loading episodes...</p>
+    </div>
+  </main>
+
+  <footer>
+    <p>Script by <a href="https://anthropic.com">Claude</a>. Voice by <a href="https://elevenlabs.io">ElevenLabs</a>. Automated with <a href="https://github.com/features/actions">GitHub Actions</a>.</p>
+  </footer>
+
+  <script>
+    async function loadEpisodes() {
+      const container = document.getElementById('episode-list');
+      try {
+        const res = await fetch('feed.xml');
+        if (!res.ok) throw new Error('Feed not found');
+        const text = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(text, 'application/xml');
+        const items = doc.querySelectorAll('item');
+
+        if (items.length === 0) {
+          container.innerHTML = '<p class="loading">No episodes yet. First episode publishes this Friday.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        items.forEach(item => {
+          const title = item.querySelector('title')?.textContent || 'Untitled';
+          const description = item.querySelector('description')?.textContent || '';
+          const pubDate = item.querySelector('pubDate')?.textContent || '';
+          const enclosure = item.querySelector('enclosure');
+          const audioUrl = enclosure?.getAttribute('url') || '#';
+
+          const date = pubDate ? new Date(pubDate).toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          }) : '';
+
+          const ep = document.createElement('div');
+          ep.className = 'episode';
+          ep.innerHTML = `
+            <div>
+              <p class="episode-meta">${date}</p>
+              <p class="episode-title">${escapeHtml(title)}</p>
+              <p class="episode-description">${escapeHtml(description.slice(0, 180))}${description.length > 180 ? '...' : ''}</p>
+            </div>
+            <a class="episode-play" href="${audioUrl}" title="Download episode" download>
+              <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </a>`;
+          container.appendChild(ep);
+        });
+      } catch (e) {
+        container.innerHTML = '<p class="loading">No episodes yet. First episode publishes this Friday.</p>';
+      }
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.appendChild(document.createTextNode(str));
+      return d.innerHTML;
+    }
+
+    loadEpisodes();
+  </script>
+</body>
+</html>

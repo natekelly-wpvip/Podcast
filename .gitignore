@@ -1,0 +1,6 @@
+episodes/*.mp3
+episode_meta.json
+__pycache__/
+*.pyc
+.env
+.DS_Store

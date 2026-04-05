@@ -1,0 +1,90 @@
+name: Publish Podcast Episode
+
+on:
+  schedule:
+    # Every Friday at 9:00 AM Eastern (13:00 UTC, accounting for DST)
+    - cron: "0 13 * * 5"
+  workflow_dispatch:
+    inputs:
+      episode_override:
+        description: "Override episode number (leave blank to auto-detect)"
+        required: false
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install ffmpeg
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Determine episode number
+        id: episode
+        run: |
+          if [ -n "${{ github.event.inputs.episode_override }}" ]; then
+            echo "number=${{ github.event.inputs.episode_override }}" >> $GITHUB_OUTPUT
+          else
+            COUNT=$(gh release list --limit 200 2>/dev/null | wc -l || echo 0)
+            echo "number=$((COUNT + 1))" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate episode script and audio
+        run: python scripts/generate_episode.py ${{ steps.episode.outputs.number }}
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
+
+      - name: Create GitHub Release and upload audio
+        id: release
+        run: |
+          EP_NUM=${{ steps.episode.outputs.number }}
+          TITLE=$(python -c "import json; d=json.load(open('episode_meta.json')); print(d['title'])")
+          AUDIO_PATH=$(python -c "import json; d=json.load(open('episode_meta.json')); print(d['audio_path'])")
+          DATE=$(date -u +"%Y-%m-%d")
+          TAG="ep$(printf '%03d' $EP_NUM)"
+
+          gh release create "$TAG" \
+            --title "Ep. $EP_NUM: $TITLE" \
+            --notes "Auto-generated episode. Published $DATE." \
+            "$AUDIO_PATH"
+
+          AUDIO_URL=$(gh release view "$TAG" --json assets --jq '.assets[0].browserDownloadUrl')
+          echo "audio_url=$AUDIO_URL" >> $GITHUB_OUTPUT
+          echo "Released: $AUDIO_URL"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update RSS feed
+        run: python scripts/update_feed.py --audio-url "${{ steps.release.outputs.audio_url }}"
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+
+      - name: Commit and push feed update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          EP_NUM=${{ steps.episode.outputs.number }}
+          TITLE=$(python -c "import json; d=json.load(open('episode_meta.json')); print(d['title'])")
+          git add feed.xml
+          git diff --staged --quiet || git commit -m "Publish ep$(printf '%03d' $EP_NUM): $TITLE"
+          git push
