@@ -28,6 +28,10 @@ def get_podcast_link() -> str:
     return f"https://{owner}.github.io/{name}"
 
 
+PODCAST_EMAIL = "natepkelly@gmail.com"
+PODCAST_IMAGE_URL = "https://natekelly-wpvip.github.io/Podcast/cover.png"
+
+
 def build_initial_feed(podcast_link: str) -> str:
     return f"""<?xml version='1.0' encoding='utf-8'?>
 <rss version="2.0"
@@ -41,6 +45,11 @@ def build_initial_feed(podcast_link: str) -> str:
     <lastBuildDate>{formatdate(usegmt=True)}</lastBuildDate>
     <atom:link href="{podcast_link}/feed.xml" rel="self" type="application/rss+xml"/>
     <itunes:author>{PODCAST_AUTHOR}</itunes:author>
+    <itunes:owner>
+      <itunes:name>{PODCAST_AUTHOR}</itunes:name>
+      <itunes:email>{PODCAST_EMAIL}</itunes:email>
+    </itunes:owner>
+    <itunes:image href="{PODCAST_IMAGE_URL}"/>
     <itunes:category text="{PODCAST_CATEGORY}"/>
     <itunes:explicit>{PODCAST_EXPLICIT}</itunes:explicit>
     <itunes:type>episodic</itunes:type>
