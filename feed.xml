@@ -19,17 +19,8 @@
     <itunes:explicit>no</itunes:explicit>
     <itunes:type>episodic</itunes:type>
 
-    
-    <item>
-      <title>Ep. 2: When AI Eats the Traffic That Feeds You</title>
-      <description>The Washington Post announced earlier this year that it would cut roughly thirty percent of its workforce, and it cited AI as part of the reason. Let that sink in for a moment. One of the most storied names in American journalism — the paper that broke Watergate — is shrinking by almost a third, and...</description>
-      <pubDate>Mon, 06 Apr 2026 20:08:57 GMT</pubDate>
-      <guid isPermaLink="false">https://github.com/natekelly-wpvip/Podcast/releases/download/ep002/ep002.mp3</guid>
-      <enclosure url="https://github.com/natekelly-wpvip/Podcast/releases/download/ep002/ep002.mp3" type="audio/mpeg" length="8028619"/>
-      <itunes:episode>2</itunes:episode>
-      <itunes:episodeType>full</itunes:episodeType>
-    </item>
-    <item>
+
+<item>
       <title>Ep. 1: The Newsroom That Fired Its Memory</title>
       <description>Three weeks ago, the Philadelphia Inquirer quietly laid off its entire archive research team. Twelve people, most of them with more than a decade at the paper, replaced by an internal retrieval system built on top of a fine-tuned large language model. The system can surface any story from 1829 to ye...</description>
       <pubDate>Sun, 05 Apr 2026 22:55:11 GMT</pubDate>
