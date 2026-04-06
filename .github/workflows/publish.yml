@@ -15,8 +15,19 @@ permissions:
   contents: write
 
 jobs:
-  publish:
+  # -----------------------------------------------------------------------
+  # Job 1: Generate script, create audio, upload to GitHub Releases.
+  # Runs automatically. No approval needed.
+  # After this job completes, GitHub emails you a review notification.
+  # Listen to the episode on the Releases page, then approve to go live.
+  # -----------------------------------------------------------------------
+  generate:
     runs-on: ubuntu-latest
+
+    outputs:
+      episode_number: ${{ steps.episode.outputs.number }}
+      audio_url: ${{ steps.release.outputs.audio_url }}
+      episode_title: ${{ steps.meta.outputs.title }}
 
     steps:
       - name: Checkout repository
@@ -55,7 +66,7 @@ jobs:
           ELEVENLABS_VOICE_ID: ${{ secrets.ELEVENLABS_VOICE_ID }}
           TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
 
-      - name: Create GitHub Release and upload audio
+      - name: Upload audio to GitHub Releases
         id: release
         run: |
           EP_NUM=${{ steps.episode.outputs.number }}
@@ -66,19 +77,67 @@ jobs:
 
           gh release create "$TAG" \
             --title "Ep. $EP_NUM: $TITLE" \
-            --notes "Auto-generated episode. Published $DATE." \
+            --notes "$(cat <<EOF
+          **Episode $EP_NUM — pending review**
+
+          Listen before approving:
+          $(basename "$AUDIO_PATH") is attached below.
+
+          To publish this episode to the RSS feed, go to the workflow run and click Approve.
+          EOF
+          )" \
             "$AUDIO_PATH"
 
-          # Construct the download URL directly — always predictable from tag + filename
           FILENAME=$(basename "$AUDIO_PATH")
           AUDIO_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/${FILENAME}"
           echo "audio_url=$AUDIO_URL" >> $GITHUB_OUTPUT
-          echo "Released: $AUDIO_URL"
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Save episode title as output
+        id: meta
+        run: |
+          TITLE=$(python -c "import json; d=json.load(open('episode_meta.json')); print(d['title'])")
+          echo "title=$TITLE" >> $GITHUB_OUTPUT
+
+      - name: Upload episode_meta.json as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: episode-meta
+          path: episode_meta.json
+          retention-days: 7
+
+  # -----------------------------------------------------------------------
+  # Job 2: Publish to RSS feed.
+  # Requires manual approval via the podcast-review GitHub Environment.
+  # GitHub will email you when this is waiting. Approve when ready to go live.
+  # -----------------------------------------------------------------------
+  publish-to-feed:
+    runs-on: ubuntu-latest
+    needs: generate
+    environment: podcast-review
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Download episode metadata
+        uses: actions/download-artifact@v4
+        with:
+          name: episode-meta
+
       - name: Update RSS feed
-        run: python scripts/update_feed.py --audio-url "${{ steps.release.outputs.audio_url }}"
+        run: python scripts/update_feed.py --audio-url "${{ needs.generate.outputs.audio_url }}"
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
 
@@ -86,8 +145,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          EP_NUM=${{ steps.episode.outputs.number }}
-          TITLE=$(python -c "import json; d=json.load(open('episode_meta.json')); print(d['title'])")
+          EP_NUM=${{ needs.generate.outputs.episode_number }}
+          TITLE="${{ needs.generate.outputs.episode_title }}"
           git add feed.xml
           git diff --staged --quiet || git commit -m "Publish ep$(printf '%03d' $EP_NUM): $TITLE"
           git push
