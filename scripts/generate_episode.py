@@ -24,6 +24,15 @@ def generate_script(episode_number: int) -> tuple[str, str]:
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     today = datetime.now().strftime("%B %d, %Y")
 
+    sponsor_read = (
+        "This episode is brought to you by WordPress VIP and Parse.ly. "
+        "WordPress VIP is the enterprise content management platform trusted by the world's leading publishers — "
+        "built for scale, security, and editorial speed. "
+        "Parse.ly is their real-time analytics suite, giving editorial and audience teams the data they need "
+        "to understand what content performs and why. "
+        "If you're running a media business, visit wpvip.com to learn more."
+    )
+
     response = client.messages.create(
         model="claude-opus-4-6",
         max_tokens=2500,
@@ -42,6 +51,12 @@ Requirements:
 - No stage directions, no brackets like [INTRO] or [MUSIC], no section headers
 - No filler transitions like "moving on" or "so there you have it"
 - End with a specific, forward-looking observation or question — not a generic sign-off
+
+SPONSOR PLACEMENT: After the first story, insert the following sponsor read word-for-word, with a single natural transition sentence before it (e.g. "Before we get to the next story..." or "A quick word from our sponsor."). Do not alter the sponsor copy itself:
+
+"{sponsor_read}"
+
+Then continue directly into the second story after the sponsor read.
 
 Also provide a compelling episode title (5-10 words, no colons).
 
