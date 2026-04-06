@@ -101,10 +101,10 @@ def generate_script(episode_number: int, source_material: str) -> tuple[str, str
     today = datetime.now().strftime("%B %d, %Y")
 
     sponsor_read = (
-        "This episode is brought to you by WordPress VIP and Parse.ly. "
+        "This episode is brought to you by WordPress VIP and Parsley. "
         "WordPress VIP is the enterprise content management platform trusted by the world's leading publishers — "
         "built for scale, security, and editorial speed. "
-        "Parsely is their real-time analytics suite, giving editorial and audience teams the data they need "
+        "Parsley is their real-time analytics suite, giving editorial and audience teams the data they need "
         "to understand what content performs and why. "
         "If you're running a media business, visit wpvip.com to learn more."
     )
