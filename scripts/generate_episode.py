@@ -2,6 +2,12 @@
 """
 Generate a podcast episode: script via Claude, audio via ElevenLabs.
 Outputs episode_meta.json for downstream steps.
+
+News sourcing:
+  - Calls Tavily Search API to pull real articles from the past 7 days
+  - Claude is grounded in those sources before writing the script
+  - No facts are invented — Claude is instructed to flag uncertainty
+    and only use what the sources support
 """
 
 import anthropic
@@ -18,9 +24,79 @@ import requests
 PODCAST_NAME = "Signal & Noise"
 MAX_CHARS_PER_CHUNK = 4500  # ElevenLabs safe limit per request
 
+SEARCH_QUERIES = [
+    "AI artificial intelligence media publishing news this week",
+    "newsroom AI automation journalism 2025",
+    "publisher revenue monetization AI tools news",
+    "media industry artificial intelligence announcements",
+]
 
-def generate_script(episode_number: int) -> tuple[str, str]:
-    """Use Claude to write the episode title and script."""
+
+def search_recent_news() -> str:
+    """
+    Query Tavily for real news from the past 7 days across media and AI topics.
+    Returns a formatted string of source material for Claude to work from.
+    """
+    api_key = os.environ.get("TAVILY_API_KEY")
+    if not api_key:
+        print("  Warning: TAVILY_API_KEY not set. Skipping news search.")
+        return ""
+
+    all_results = []
+    seen_urls = set()
+
+    for query in SEARCH_QUERIES:
+        try:
+            response = requests.post(
+                "https://api.tavily.com/search",
+                json={
+                    "api_key": api_key,
+                    "query": query,
+                    "search_depth": "advanced",
+                    "max_results": 5,
+                    "days": 7,
+                    "include_answer": False,
+                    "include_raw_content": False,
+                },
+                timeout=20,
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            for result in data.get("results", []):
+                url = result.get("url", "")
+                if url in seen_urls:
+                    continue
+                seen_urls.add(url)
+                all_results.append({
+                    "title": result.get("title", ""),
+                    "url": url,
+                    "published_date": result.get("published_date", "unknown date"),
+                    "content": result.get("content", "").strip(),
+                })
+
+        except Exception as e:
+            print(f"  Search warning for query '{query}': {e}")
+            continue
+
+    if not all_results:
+        return ""
+
+    # Format into a readable block for Claude
+    lines = [f"SOURCED NEWS — past 7 days ({datetime.now().strftime('%B %d, %Y')})\n"]
+    for i, r in enumerate(all_results, 1):
+        lines.append(f"[{i}] {r['title']}")
+        lines.append(f"    Source: {r['url']}")
+        lines.append(f"    Date: {r['published_date']}")
+        lines.append(f"    Summary: {r['content'][:400]}")
+        lines.append("")
+
+    print(f"  Retrieved {len(all_results)} articles from {len(SEARCH_QUERIES)} queries.")
+    return "\n".join(lines)
+
+
+def generate_script(episode_number: int, source_material: str) -> tuple[str, str]:
+    """Use Claude to write the episode title and script, grounded in real sources."""
     client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
     today = datetime.now().strftime("%B %d, %Y")
 
@@ -33,32 +109,55 @@ def generate_script(episode_number: int) -> tuple[str, str]:
         "If you're running a media business, visit wpvip.com to learn more."
     )
 
+    if source_material:
+        source_block = f"""You have been given the following real news articles sourced from the past 7 days.
+These are your only permitted sources of facts, statistics, company names, product names, and claims.
+
+{source_material}
+
+JOURNALISTIC RULES — follow these strictly:
+- Only state facts that are directly supported by the sources above
+- If you reference a statistic, company action, product, or event, it must appear in the sources
+- If a topic is interesting but the sources are thin on detail, say so honestly ("details are still emerging" or "we're still waiting on more reporting")
+- Do not invent quotes, data points, survey results, or named individuals
+- Do not blend old knowledge with new sources — if it is not in the sources above, do not state it as current fact
+- You may provide analysis and interpretation of the sourced facts — that is your job as a host — but clearly distinguish your take from the reported facts
+"""
+    else:
+        source_block = """No live search results were available this run.
+Write a thoughtful, evergreen episode on the state of media and AI — but be explicit with the audience that you are discussing ongoing trends rather than breaking news.
+Do not invent specific events, statistics, product launches, or company actions. Speak in general, well-established terms only."""
+
     response = client.messages.create(
         model="claude-opus-4-6",
         max_tokens=2500,
         messages=[
             {
                 "role": "user",
-                "content": f"""You are the host of "{PODCAST_NAME}," episode {episode_number} — a weekly AI-generated podcast at the intersection of media and artificial intelligence.
+                "content": f"""You are the host of "{PODCAST_NAME}," episode {episode_number} — a weekly AI-generated podcast at the intersection of media and artificial intelligence. Think like an experienced technology journalist: precise, skeptical, well-sourced, and direct.
 
-Today is {today}. Write a full ~10-minute podcast episode (approximately 1,300-1,500 words of spoken content).
+Today is {today}.
 
-Requirements:
-- Strong opening hook — do not start with "welcome back" or generic intros
-- Cover 2-3 substantive themes in media and AI: newsroom automation, AI-generated content ethics, publisher monetization, platform algorithm shifts, notable product launches, audience behavior research, or similar
-- Sharp analysis and a clear point of view, not just summaries
-- Conversational but authoritative tone — sounds natural when read aloud
+{source_block}
+
+Now write a full ~10-minute episode script (approximately 1,300-1,500 words of spoken content).
+
+Script requirements:
+- Open with a strong, specific hook rooted in one of the sourced stories — not a generic observation
+- Cover 2-3 stories or themes drawn from the source material above
+- Provide sharp editorial analysis — not just summaries. Tell the audience why it matters, what it signals, what to watch for
+- Conversational but authoritative tone — reads naturally when spoken aloud
 - No stage directions, no brackets like [INTRO] or [MUSIC], no section headers
-- No filler transitions like "moving on" or "so there you have it"
-- End with a specific, forward-looking observation or question — not a generic sign-off
+- No filler phrases like "moving on," "so there you have it," or "it's a fascinating time"
+- End with a specific, forward-looking observation or open question — not a generic sign-off
 
-SPONSOR PLACEMENT: After the first story, insert the following sponsor read word-for-word, with a single natural transition sentence before it (e.g. "Before we get to the next story..." or "A quick word from our sponsor."). Do not alter the sponsor copy itself:
+SPONSOR PLACEMENT: After the first story, insert the following sponsor read word-for-word, with one natural transition sentence before it. Do not alter the sponsor copy:
 
 "{sponsor_read}"
 
-Then continue directly into the second story after the sponsor read.
+Then continue directly into the second story.
 
-Also provide a compelling episode title (5-10 words, no colons).
+Also provide a compelling episode title (5-10 words, no colons) that reflects the actual stories covered.
 
 Respond ONLY in this exact JSON format with no markdown or code fences:
 {{"title": "Episode title here", "script": "Full spoken script here..."}}""",
@@ -160,22 +259,32 @@ def generate_audio(script: str, output_path: str) -> int:
 def main():
     episode_number = int(sys.argv[1]) if len(sys.argv) > 1 else 1
 
-    print(f"[1/3] Generating script for episode {episode_number}...")
-    title, script = generate_script(episode_number)
+    print(f"[1/4] Searching for news from the past 7 days...")
+    source_material = search_recent_news()
+    if not source_material:
+        print("  No sources retrieved — episode will use evergreen framing.")
+
+    print(f"[2/4] Generating script for episode {episode_number}...")
+    title, script = generate_script(episode_number, source_material)
     print(f"  Title: {title}")
     print(f"  Script length: {len(script):,} characters")
 
-    # Save script for reference
+    # Save script and sources for reference
     script_path = Path(f"episodes/ep{episode_number:03d}_script.txt")
     script_path.parent.mkdir(parents=True, exist_ok=True)
     script_path.write_text(f"Episode {episode_number}: {title}\n\n{script}")
 
-    print(f"[2/3] Generating audio...")
+    if source_material:
+        sources_path = Path(f"episodes/ep{episode_number:03d}_sources.txt")
+        sources_path.write_text(source_material)
+        print(f"  Sources saved: {sources_path}")
+
+    print(f"[3/4] Generating audio...")
     audio_path = f"episodes/ep{episode_number:03d}.mp3"
     file_size = generate_audio(script, audio_path)
     print(f"  Saved: {audio_path} ({file_size / 1_000_000:.1f} MB)")
 
-    print(f"[3/3] Writing episode metadata...")
+    print(f"[4/4] Writing episode metadata...")
     meta = {
         "number": episode_number,
         "title": title,
