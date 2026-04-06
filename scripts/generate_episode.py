@@ -210,6 +210,51 @@ def tts_chunk(text: str, voice_id: str, api_key: str) -> bytes:
     return response.content
 
 
+def mix_intro_outro(episode_path: str, output_path: str) -> None:
+    """
+    Stitch intro + episode + outro using ffmpeg.
+    Uses the first 8 seconds of audio/intro.mp3 for both intro and outro.
+    Intro: 1s fade in, 2s fade out. Outro: 1s fade in, 3s fade out.
+    """
+    intro_src = "audio/intro.mp3"
+    if not Path(intro_src).exists():
+        print("  No audio/intro.mp3 found — skipping intro/outro mix.")
+        return
+
+    intro_clip = episode_path + ".intro.mp3"
+    outro_clip = episode_path + ".outro.mp3"
+
+    # Trim and fade intro (8 seconds)
+    subprocess.run([
+        "ffmpeg", "-y", "-i", intro_src, "-t", "8",
+        "-af", "afade=t=in:st=0:d=1,afade=t=out:st=6:d=2",
+        intro_clip
+    ], check=True, capture_output=True)
+
+    # Trim and fade outro (8 seconds, longer fade out)
+    subprocess.run([
+        "ffmpeg", "-y", "-i", intro_src, "-t", "8",
+        "-af", "afade=t=in:st=0:d=1,afade=t=out:st=5:d=3",
+        outro_clip
+    ], check=True, capture_output=True)
+
+    # Concat: intro + episode + outro
+    concat_list = episode_path + ".mix.txt"
+    with open(concat_list, "w") as f:
+        f.write(f"file '{os.path.abspath(intro_clip)}'\n")
+        f.write(f"file '{os.path.abspath(episode_path)}'\n")
+        f.write(f"file '{os.path.abspath(outro_clip)}'\n")
+
+    subprocess.run([
+        "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+        "-i", concat_list, "-c", "copy", output_path
+    ], check=True, capture_output=True)
+
+    # Clean up temp files
+    for f in [intro_clip, outro_clip, concat_list]:
+        os.remove(f)
+
+
 def generate_audio(script: str, output_path: str) -> int:
     """Convert script to MP3 via ElevenLabs. Returns file size in bytes."""
     api_key = os.environ["ELEVENLABS_API_KEY"]
@@ -280,9 +325,16 @@ def main():
         print(f"  Sources saved: {sources_path}")
 
     print(f"[3/4] Generating audio...")
+    raw_audio_path = f"episodes/ep{episode_number:03d}_raw.mp3"
     audio_path = f"episodes/ep{episode_number:03d}.mp3"
-    file_size = generate_audio(script, audio_path)
-    print(f"  Saved: {audio_path} ({file_size / 1_000_000:.1f} MB)")
+    file_size = generate_audio(script, raw_audio_path)
+    print(f"  Speech generated: {raw_audio_path} ({file_size / 1_000_000:.1f} MB)")
+
+    print(f"  Mixing intro and outro...")
+    mix_intro_outro(raw_audio_path, audio_path)
+    os.remove(raw_audio_path)
+    file_size = Path(audio_path).stat().st_size
+    print(f"  Final episode: {audio_path} ({file_size / 1_000_000:.1f} MB)")
 
     print(f"[4/4] Writing episode metadata...")
     meta = {
