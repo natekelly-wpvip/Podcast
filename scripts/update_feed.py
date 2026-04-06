@@ -16,7 +16,7 @@ PODCAST_DESCRIPTION = (
     "Weekly AI-generated analysis at the intersection of media and artificial intelligence. "
     "Script written by Claude. Voice by ElevenLabs. Published every Friday."
 )
-PODCAST_AUTHOR = "Signal & Noise"
+PODCAST_AUTHOR = "Nate Kelly"
 PODCAST_LANGUAGE = "en-us"
 PODCAST_CATEGORY = "Technology"
 PODCAST_EXPLICIT = "no"
