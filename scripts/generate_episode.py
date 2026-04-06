@@ -238,20 +238,26 @@ def mix_intro_outro(episode_path: str, output_path: str) -> None:
         outro_clip
     ], check=True, capture_output=True)
 
-    # Concat: intro + episode + outro
-    concat_list = episode_path + ".mix.txt"
-    with open(concat_list, "w") as f:
-        f.write(f"file '{os.path.abspath(intro_clip)}'\n")
-        f.write(f"file '{os.path.abspath(episode_path)}'\n")
-        f.write(f"file '{os.path.abspath(outro_clip)}'\n")
-
+    # Concat using filter_complex — re-encodes all inputs to a consistent
+    # format (44.1kHz stereo MP3) before joining, preventing warping caused
+    # by sample rate or channel mismatches between intro and speech audio.
     subprocess.run([
-        "ffmpeg", "-y", "-f", "concat", "-safe", "0",
-        "-i", concat_list, "-c", "copy", output_path
+        "ffmpeg", "-y",
+        "-i", intro_clip,
+        "-i", episode_path,
+        "-i", outro_clip,
+        "-filter_complex",
+        "[0:a][1:a][2:a]concat=n=3:v=0:a=1[out]",
+        "-map", "[out]",
+        "-acodec", "libmp3lame",
+        "-ar", "44100",
+        "-ac", "2",
+        "-q:a", "2",
+        output_path
     ], check=True, capture_output=True)
 
     # Clean up temp files
-    for f in [intro_clip, outro_clip, concat_list]:
+    for f in [intro_clip, outro_clip]:
         os.remove(f)
 
 
@@ -287,7 +293,11 @@ def generate_audio(script: str, output_path: str) -> int:
                 f.write(f"file '{os.path.abspath(cp)}'\n")
 
         subprocess.run(
-            ["ffmpeg", "-f", "concat", "-safe", "0", "-i", concat_list, "-c", "copy", output_path],
+            [
+                "ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", concat_list,
+                "-acodec", "libmp3lame", "-ar", "44100", "-ac", "2", "-q:a", "2",
+                output_path
+            ],
             check=True,
             capture_output=True,
         )
