@@ -104,7 +104,7 @@ def generate_script(episode_number: int, source_material: str) -> tuple[str, str
         "This episode is brought to you by WordPress VIP and Parse.ly. "
         "WordPress VIP is the enterprise content management platform trusted by the world's leading publishers — "
         "built for scale, security, and editorial speed. "
-        "Parse.ly is their real-time analytics suite, giving editorial and audience teams the data they need "
+        "Parsely is their real-time analytics suite, giving editorial and audience teams the data they need "
         "to understand what content performs and why. "
         "If you're running a media business, visit wpvip.com to learn more."
     )
