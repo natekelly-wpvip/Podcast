@@ -69,9 +69,9 @@ jobs:
             --notes "Auto-generated episode. Published $DATE." \
             "$AUDIO_PATH"
 
-          # Wait briefly for GitHub to process the asset, then fetch the URL
-          sleep 5
-          AUDIO_URL=$(gh release view "$TAG" --json assets --jq '.assets[0].browserDownloadUrl')
+          # Construct the download URL directly — always predictable from tag + filename
+          FILENAME=$(basename "$AUDIO_PATH")
+          AUDIO_URL="https://github.com/${{ github.repository }}/releases/download/${TAG}/${FILENAME}"
           echo "audio_url=$AUDIO_URL" >> $GITHUB_OUTPUT
           echo "Released: $AUDIO_URL"
         env:
