@@ -7,7 +7,7 @@
     <description>Weekly AI-generated analysis at the intersection of media and artificial intelligence. Script written by Claude. Voice by ElevenLabs. Published every Friday.</description>
     <link>https://natekelly-wpvip.github.io/Podcast</link>
     <language>en-us</language>
-    <lastBuildDate>Mon, 06 Apr 2026 20:32:51 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 10 Apr 2026 16:03:25 GMT</lastBuildDate>
     <atom:link href="https://natekelly-wpvip.github.io/Podcast/feed.xml" rel="self" type="application/rss+xml"/>
     <itunes:author>Nate Kelly</itunes:author>
     <itunes:owner>
@@ -21,6 +21,16 @@
 
 
 
+    
+    <item>
+      <title>Ep. 4: When AI Eats the News That Feeds It</title>
+      <description>Click-through rates from AI chatbots hover around zero-point-three-three percent. Traditional Google Search? Eight-point-six percent. That is a twenty-six-fold difference — and it's the single number every news publisher in America should have tattooed on the back of their hand right now. Because th...</description>
+      <pubDate>Fri, 10 Apr 2026 16:03:25 GMT</pubDate>
+      <guid isPermaLink="false">https://github.com/natekelly-wpvip/Podcast/releases/download/ep004/ep004.mp3</guid>
+      <enclosure url="https://github.com/natekelly-wpvip/Podcast/releases/download/ep004/ep004.mp3" type="audio/mpeg" length="10170216"/>
+      <itunes:episode>4</itunes:episode>
+      <itunes:episodeType>full</itunes:episodeType>
+    </item>
     <item>
       <title>Ep. 3: When the Traffic Disappears Who Survives</title>
       <description>Earlier this year, the Washington Post announced it would cut roughly thirty percent of its workforce, citing AI as part of the reason. Let that land for a second. One of the most storied newsrooms in American journalism, the paper that broke Watergate, is slashing nearly a third of its staff, and a...</description>
